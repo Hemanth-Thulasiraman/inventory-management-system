@@ -1,0 +1,68 @@
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from '@phosphor-icons/react';
+import { fetchOrderById, updateOrder } from '../store/orderSlice';
+
+export default function OrderEdit() {
+  const { id } = useParams();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { current: order } = useSelector(state => state.orders);
+  const [quantity, setQuantity] = useState(1);
+  const [notes, setNotes] = useState('');
+
+  useEffect(() => { dispatch(fetchOrderById(id)); }, [dispatch, id]);
+  useEffect(() => {
+    if (order) {
+      setQuantity(order.quantity);
+      setNotes(order.notes || '');
+    }
+  }, [order]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await dispatch(updateOrder({ id, quantity: parseInt(quantity), notes }));
+    navigate('/orders');
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <button onClick={() => navigate('/orders')} className="p-2 hover:bg-gray-100 rounded-lg">
+            <ArrowLeft size={20} className="text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Edit Order</h1>
+            <p className="text-sm text-gray-500">Update order details</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <button onClick={() => navigate('/orders')} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Cancel</button>
+          <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Save Changes</button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-3xl">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Product</label>
+            <input type="text" value={order?.Product?.name || ''} disabled
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Requested Quantity <span className="text-red-500">*</span></label>
+            <input type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
+              placeholder="Order notes..." className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
